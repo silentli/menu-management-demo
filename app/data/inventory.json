@@ -1,0 +1,9 @@
+[
+  {"id": 101, "name": "Dumpling", "quantity": 30},
+  {"id": 102, "name": "Spring Roll", "quantity": 15},
+  {"id": 201, "name": "Fried Rice", "quantity": 20},
+  {"id": 202, "name": "Wonton Soup", "quantity": 20},
+  {"id": 203, "name": "Beef Noodle", "quantity": 25},
+  {"id": 301, "name": "Tea", "quantity": 50}
+]
+

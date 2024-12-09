@@ -5,15 +5,15 @@ from app.models.order_item import OrderItem
 
 @pytest.fixture
 def dumpling():
-    return MenuItem(name="Dumpling", price=5.0, category="Appetizer")
-
-@pytest.fixture
-def tea():
-    return MenuItem(name="Tea", price=2.0, category="Beverage")
+    return MenuItem(id=101, category="Appetizer", name="Dumpling", price=5.0)
 
 @pytest.fixture
 def fried_rice():
-    return MenuItem(name="Fried Rice", price=8.0, category="Main Course")
+    return MenuItem(id=201, category="Main Course", name="Fried Rice", price=8.0)
+
+@pytest.fixture
+def tea():
+    return MenuItem(id=301, category="Beverage", name="Tea", price=2.0)
 
 def test_order_initialization(dumpling, tea):
     order_item_1 = OrderItem(menu_item=dumpling, quantity=2)

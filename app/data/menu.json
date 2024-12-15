@@ -1,8 +1,8 @@
 [
-  {"id": 101, "category": "Appetizer", "name": "Dumpling", "price": 5.0},
-  {"id": 102, "category": "Appetizer", "name": "Spring Roll", "price": 4.5},
-  {"id": 201, "category": "Main Course", "name": "Fried Rice", "price": 8.0},
-  {"id": 202, "category": "Main Course", "name": "Wonton Soup", "price": 7.5},
-  {"id": 203, "category": "Main Course", "name": "Beef Noodle", "price": 9.0},
-  {"id": 301, "category": "Beverage", "name": "Tea", "price": 2.0}
+  {"id": 101, "category": "Appetizer", "name": "Dumpling", "price": 5.00},
+  {"id": 102, "category": "Appetizer", "name": "Spring Roll", "price": 4.50},
+  {"id": 201, "category": "Main Course", "name": "Fried Rice", "price": 8.00},
+  {"id": 202, "category": "Main Course", "name": "Wonton Soup", "price": 7.50},
+  {"id": 203, "category": "Main Course", "name": "Beef Noodle", "price": 9.00},
+  {"id": 301, "category": "Beverage", "name": "Tea", "price": 2.00}
 ]

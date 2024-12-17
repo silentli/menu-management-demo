@@ -5,13 +5,18 @@ from app.models.order_item import OrderItem
 
 @dataclass
 class Order:
-    id: int
+    id: str
     order_items: list[OrderItem] = field(default_factory=list)
 
     @property
     def total_price(self)-> float:
-        # calculate the total price of the order
+        """calculate the total price of the order"""
         return sum(order_item.menu_item.price * order_item.quantity for order_item in self.order_items)
+
+    @property
+    def menu_items(self) -> list[MenuItem]:
+        """returns a list of MenuItem objects from the current order"""
+        return [order_item.menu_item for order_item in self.order_items]
 
     def _find_order_item(self, menu_item: MenuItem) -> OrderItem | None:
         return next((order_item for order_item in self.order_items if order_item.menu_item == menu_item), None)
@@ -32,3 +37,8 @@ class Order:
             existing_order_item.quantity -= quantity
         else:
             self.order_items.remove(existing_order_item)
+
+    def get_item_quantity(self, menu_item: MenuItem) -> int:
+        """get the quantity of a specific menuitem in the order"""
+        order_item = self._find_order_item(menu_item)
+        return order_item.quantity if order_item else 0

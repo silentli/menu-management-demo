@@ -25,3 +25,7 @@ class InventoryManager:
             return False
         item.quantity += delta
         return True
+
+    def check_availability_by_id(self, item_id: int, required_quantity: int) -> bool:
+        item = self._inventory_map.get(item_id)
+        return item and item.quantity >= required_quantity

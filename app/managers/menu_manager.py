@@ -1,4 +1,5 @@
 from app.models.menu_item import MenuItem
+from app.utils.fuzzy_match import find_fuzzy_menu_item
 import json
 
 class MenuManager:
@@ -18,3 +19,6 @@ class MenuManager:
     def get_menu_items(self) -> list[MenuItem]:
         """returns all loaded menu items."""
         return self._menu_items
+
+    def get_menu_item_by_name(self, item_name: str) -> MenuItem | None:
+        return find_fuzzy_menu_item(item_name, self._menu_items)

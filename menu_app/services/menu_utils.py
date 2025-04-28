@@ -28,29 +28,29 @@ def get_menu_items_bulk(menu_item_ids: List[int] = None, names: List[str] = None
     return db_utils.get_model_instances_bulk(menu_item.MenuItem, ids=menu_item_ids, names=names)
 
 
-def get_all_menu_items():
+def get_all_menu_items() -> List[menu_item.MenuItem]:
     """
     Get all menu items ordered by category and name
     """
-    return db_utils.get_model_queryset(menu_item.MenuItem).order_by('category', 'name')
+    return list(db_utils.get_model_queryset(menu_item.MenuItem).order_by('category', 'name'))
 
 
-def get_menu_items_by_category(category: str):
+def get_menu_items_by_category(category: str) -> List[menu_item.MenuItem]:
     """
     Get menu items filtered by category
     """
-    return db_utils.get_model_queryset(menu_item.MenuItem, category=category).order_by('name')
+    return list(db_utils.get_model_queryset(menu_item.MenuItem, category=category).order_by('name'))
 
 
-def get_available_menu_items():
+def get_available_menu_items() -> List[menu_item.MenuItem]:
     """
     Get menu items that are not sold out and have inventory
     """
-    return db_utils.get_model_queryset(
+    return list(db_utils.get_model_queryset(
         menu_item.MenuItem,
         sold_out=False,
         inventory__quantity__gt=0
-    ).order_by('category', 'name')
+    ).order_by('category', 'name'))
 
 
 def find_menu_item_by_name(
@@ -103,9 +103,9 @@ def search_menu_items(query: str) -> List[menu_item.MenuItem]:
     """
     Search menu items by name or category
     """
-    return db_utils.get_model_queryset(menu_item.MenuItem).filter(
+    return list(db_utils.get_model_queryset(menu_item.MenuItem).filter(
         Q(name__icontains=query) | Q(category__icontains=query)
-    ).order_by('category', 'name')
+    ).order_by('category', 'name'))
 
 
 def check_item_availability(menu_item: menu_item.MenuItem, quantity: int = 1) -> bool:

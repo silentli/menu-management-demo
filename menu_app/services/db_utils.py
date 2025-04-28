@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Optional, Type, TypeVar, Any
+from typing import Dict, List, Optional, Type, TypeVar, Any, Union
 
 from django.db.models import Model, QuerySet
 
@@ -50,7 +50,7 @@ def get_model_instances_bulk(
     names: List[str] = None,
     name_field: str = 'name',
     **kwargs: Any
-) -> Dict:
+) -> Union[Dict[int, T], Dict[str, T]]:
     """
     Get multiple model instances by IDs or names in one query with additional filters.
     
@@ -108,6 +108,12 @@ def create_model_instance(
     Returns:
         Newly created model instance
     """
+    # Validate that all fields exist in the model
+    model_fields = {f.name for f in model_class._meta.get_fields()}
+    invalid_fields = set(kwargs.keys()) - model_fields
+    if invalid_fields:
+        raise ValueError(f"Invalid fields for {model_class.__name__}: {invalid_fields}")
+        
     return model_class.objects.create(**kwargs)
 
 
@@ -125,7 +131,21 @@ def update_model_instance(
     Returns:
         Updated model instance
     """
-    for key, value in kwargs.items():
-        setattr(instance, key, value)
+    # Get all field information once
+    meta = instance._meta
+    model_fields = {f.name: f for f in meta.get_fields()}
+    
+    # Validate that all fields exist in the model
+    invalid_fields = set(kwargs.keys()) - model_fields.keys()
+    if invalid_fields:
+        raise ValueError(f"Invalid fields for {instance.__class__.__name__}: {invalid_fields}")
+        
+    # Validate and set field values in a single loop
+    for field, value in kwargs.items():
+        field_obj = model_fields[field]
+        if hasattr(field_obj, 'validate'):
+            field_obj.validate(value, instance)
+        setattr(instance, field, value)
+    
     instance.save()
     return instance

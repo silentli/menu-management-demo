@@ -4,7 +4,6 @@ from menu_app.models.menu_item import MenuItem
 
 class Order(models.Model):
     """
-    Model representing a customer order.
     Tracks order status and contains multiple order items.
     """
 
@@ -32,18 +31,37 @@ class Order(models.Model):
     def complete(self):
         """Mark the order as completed"""
         if self.status != 'pending':
-            return False
+            raise ValueError("Only pending orders can be completed")
         self.status = 'completed'
         self.save()
-        return True
 
     def cancel(self):
         """Mark the order as cancelled"""
         if self.status != 'pending':
-            return False
+            raise ValueError("Only pending orders can be cancelled")
         self.status = 'cancelled'
         self.save()
-        return True
+
+    def find_order_item(self, menu_item):
+        """
+        Find an existing order item for a given menu item.
+        
+        Args:
+            menu_item: The MenuItem to find in the order
+            
+        Returns:
+            OrderItem if found, None otherwise
+            
+        Raises:
+            ValueError: If order is not modifiable
+        """
+        if not self.is_modifiable():
+            raise ValueError("Cannot modify a completed or cancelled order")
+            
+        try:
+            return self.items.get(menu_item=menu_item)
+        except OrderItem.DoesNotExist:
+            return None
 
     @property
     def total_price(self):
@@ -80,18 +98,27 @@ class OrderItem(models.Model):
         verbose_name = "Order Item"
         verbose_name_plural = "Order Items"
         ordering = ['order', 'menu_item__name']
+        unique_together = ['order', 'menu_item']
 
     @property
     def subtotal(self):
         """Calculate the subtotal for this item"""
         return self.price_at_time_of_order * self.quantity
 
+    def clean(self):
+        """Validate the order item"""
+        if self.quantity <= 0:
+            raise ValueError("Quantity must be positive")
+        if self.price_at_time_of_order <= 0:
+            raise ValueError("Price must be positive")
+
     def save(self, *args, **kwargs):
         # Store the price at the time of ordering if not already set
         if not self.price_at_time_of_order:
             self.price_at_time_of_order = self.menu_item.price
+        self.clean()
         super().save(*args, **kwargs)
 
     # Special methods
     def __str__(self):
-        return f"{self.quantity} x {self.menu_item.name}"
+        return f"{self.quantity} x {self.menu_item.name} (${self.subtotal})"

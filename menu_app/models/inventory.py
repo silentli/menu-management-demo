@@ -13,6 +13,7 @@ class InventoryItem(models.Model):
         related_name='inventory'
     )
     quantity = models.PositiveIntegerField(default=0)
+    low_stock_threshold = models.PositiveIntegerField(default=5)
 
     @property
     def is_sold_out(self):
@@ -22,12 +23,13 @@ class InventoryItem(models.Model):
     @property
     def is_low_stock(self):
         """Check if the item is low in stock"""
-        return self.quantity < 5  # Default threshold
+        return self.quantity < self.low_stock_threshold
 
     def mark_sold_out(self):
         """Mark the item as sold out by setting quantity to 0"""
-        self.quantity = 0
-        self.save()
+        if self.quantity > 0:
+            self.quantity = 0
+            self.save()
 
     def add_stock(self, amount):
         """Add stock to the inventory"""
@@ -44,6 +46,17 @@ class InventoryItem(models.Model):
             raise ValueError("Cannot remove more stock than available")
         self.quantity -= amount
         self.save()
+
+    def clean(self):
+        """Validate the inventory item"""
+        if self.quantity < 0:
+            raise ValueError("Quantity cannot be negative")
+        if self.low_stock_threshold <= 0:
+            raise ValueError("Low stock threshold must be positive")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.menu_item.name} - {self.quantity} available"

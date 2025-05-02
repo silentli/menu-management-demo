@@ -1,5 +1,14 @@
-from menu_app.services.menu_service import MenuService
-from menu_app.services.order_service import OrderService
-from menu_app.services.inventory_service import InventoryService
+"""
+Service layer for menu management application.
+Provides business logic and data access operations.
+"""
 
-__all__ = ['MenuService', 'OrderService', 'InventoryService'] 
+from menu_app.services import menu_service
+from menu_app.services import inventory_service
+from menu_app.services import order_service
+
+__all__ = [
+    'menu_service',
+    'inventory_service',
+    'order_service'
+] 

@@ -2,6 +2,7 @@ import logging
 from typing import List, Optional, Dict, Union
 from django.db import transaction
 from functools import wraps
+from django.db.models import QuerySet
 
 from menu_app.models import menu_item
 from menu_app.services import menu_utils
@@ -77,17 +78,28 @@ def get_menu_items(**kwargs) -> Dict[Union[int, str], menu_item.MenuItem]:
             logger.warning(f"Some menu items not found: {missing}")
     return result
 
-def get_menu(category: Optional[str] = None, available_only: bool = False) -> List[menu_item.MenuItem]:
+def get_menu(category: Optional[str] = None, available_only: bool = False) -> QuerySet[menu_item.MenuItem]:
     """
-    Get menu items with optional filtering
+    Get menu items with optional filtering.
+    
+    Args:
+        category: Optional category to filter by
+        available_only: Whether to only return available items
+        
+    Returns:
+        QuerySet[MenuItem]: A queryset of menu items
     """
-    if category:
-        standardized_category = validate_category(category)
-        return menu_utils.get_menu_items_by_category(standardized_category)
-    elif available_only:
-        return menu_utils.get_available_menu_items()
-    else:
-        return menu_utils.get_all_menu_items()
+    try:
+        queryset = menu_item.MenuItem.objects.all()
+        if category:
+            standardized_category = validate_category(category)
+            queryset = queryset.filter(category=standardized_category)
+        if available_only:
+            queryset = queryset.filter(is_available=True)
+        return queryset
+    except Exception as e:
+        logger.error(f"Error getting menu: {str(e)}")
+        raise
 
 def search_menu(query: str) -> List[menu_item.MenuItem]:
     """
@@ -109,24 +121,55 @@ def is_item_available(menu_item: menu_item.MenuItem, quantity: int = 1) -> bool:
 @with_transaction
 def add_menu_item(name: str, price: float, category: str) -> menu_item.MenuItem:
     """
-    Add a new menu item
+    Add a new menu item and create its corresponding inventory item.
+    
+    Args:
+        name: Name of the menu item
+        price: Price of the menu item
+        category: Category of the menu item
+        
+    Returns:
+        MenuItem: The created menu item
     """
-    standardized_name = validate_name(name)
-    validated_price = validate_price(price)
-    validated_category = validate_category(category)
-    
-    # Check for existing item
-    if menu_utils.get_menu_item(name=standardized_name):
-        raise ValueError(f"Menu item with name '{standardized_name}' already exists")
-    
-    # Create new menu item
-    new_item = menu_item.MenuItem(
-        name=standardized_name,
-        price=validated_price,
-        category=validated_category
-    )
-    new_item.save()
-    return new_item
+    try:
+        # Validate inputs
+        if not name or not name.strip():
+            raise ValueError("Menu item name cannot be empty")
+        if price <= 0:
+            raise ValueError("Price must be positive")
+        if not category or not category.strip():
+            raise ValueError("Category cannot be empty")
+            
+        # Standardize inputs
+        name = name.strip()
+        category = category.strip().lower()
+        
+        # Check if menu item already exists
+        if menu_item.MenuItem.objects.filter(name=name).exists():
+            raise ValueError(f"Menu item with name '{name}' already exists")
+            
+        # Create menu item
+        new_menu_item = menu_item.MenuItem(
+            name=name,
+            price=price,
+            category=category
+        )
+        new_menu_item.save()
+        
+        # Create corresponding inventory item
+        from menu_app.models.inventory import InventoryItem
+        inventory_item = InventoryItem(
+            menu_item=new_menu_item,
+            quantity=0  # Start with 0 quantity
+        )
+        inventory_item.save()
+        
+        logger.info(f"Created new menu item: {name} with inventory")
+        return new_menu_item
+        
+    except Exception as e:
+        logger.error(f"Error adding menu item: {str(e)}")
+        raise
 
 @with_transaction
 def modify_menu_item(

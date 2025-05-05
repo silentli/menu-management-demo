@@ -44,11 +44,10 @@ def get_menu_items_by_category(category: str) -> List[menu_item.MenuItem]:
 
 def get_available_menu_items() -> List[menu_item.MenuItem]:
     """
-    Get menu items that are not sold out and have inventory
+    Get menu items that have inventory
     """
     return list(db_utils.get_model_queryset(
         menu_item.MenuItem,
-        sold_out=False,
         inventory__quantity__gt=0
     ).order_by('category', 'name'))
 
@@ -110,11 +109,8 @@ def search_menu_items(query: str) -> List[menu_item.MenuItem]:
 
 def check_item_availability(menu_item: menu_item.MenuItem, quantity: int = 1) -> bool:
     """
-    Check if the requested quantity of a menu item is available
+    Check if the requested quantity of a menu item is available based on inventory
     """
-    if menu_item.sold_out:
-        return False
-
     try:
         inventory_item = inventory.InventoryItem.objects.get(menu_item=menu_item)
         return inventory_item.quantity >= quantity
@@ -147,8 +143,7 @@ def update_menu_item(
     menu_item: menu_item.MenuItem,
     name: str = None,
     price: float = None,
-    category: str = None,
-    sold_out: bool = None
+    category: str = None
 ) -> menu_item.MenuItem:
     """
     Update an existing menu item
@@ -160,7 +155,5 @@ def update_menu_item(
         update_data['price'] = price
     if category is not None:
         update_data['category'] = category
-    if sold_out is not None:
-        update_data['sold_out'] = sold_out
 
     return db_utils.update_model_instance(menu_item, **update_data)

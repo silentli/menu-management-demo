@@ -1,5 +1,8 @@
 from django.db import models
 from menu_app.models.menu_item import MenuItem
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Order(models.Model):

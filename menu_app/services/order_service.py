@@ -8,7 +8,7 @@ from typing import List, Optional, Dict
 from django.db import transaction
 
 from menu_app.models import menu_item, order
-from menu_app.services import menu_utils, db_utils
+from menu_app.services import menu_utils, db_utils, inventory_service
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,10 @@ def _get_base_order_queryset():
     Returns the base queryset for orders with items pre-selected
     to avoid repeating the select_related
     """
-    return db_utils.get_model_queryset(order.Order).select_related('items')
+    return db_utils.get_model_queryset(order.Order).prefetch_related(
+        'items',
+        'items__menu_item'
+    )
 
 
 def get_order(order_id: str) -> Optional[order.Order]:
@@ -26,16 +29,15 @@ def get_order(order_id: str) -> Optional[order.Order]:
     Get an order by ID
         
     Raises:
-        ValueError: If order_id is invalidå
+        ValueError: If order_id is invalid
     """
     if not order_id:
         raise ValueError("Order ID cannot be empty")
         
-    id = order_id.strip()
     try:
-        return _get_base_order_queryset().get(id=id)
+        return _get_base_order_queryset().get(id=order_id)
     except order.Order.DoesNotExist:
-        logger.warning(f"Order {id} not found")
+        logger.warning(f"Order {order_id} not found")
         return None
 
 
@@ -61,7 +63,7 @@ def create_order() -> order.Order:
 @transaction.atomic
 def add_item_to_order(order_id: str, menu_item_id: int, quantity: int = 1) -> None:
     """
-    Add an item to an order
+    Add an item to an order and reduce inventory
     
     Args:
         order_id: The ID of the order
@@ -87,15 +89,26 @@ def add_item_to_order(order_id: str, menu_item_id: int, quantity: int = 1) -> No
         # Check if item already exists in order
         existing_item = order_obj.find_order_item(menu_item_obj)
         if existing_item:
+            # Check if we have enough inventory for the additional quantity
+            if not menu_utils.check_item_availability(menu_item_obj, quantity):
+                raise ValueError(f"Insufficient stock for {menu_item_obj.name}")
             existing_item.quantity += quantity
             db_utils.update_model_instance(existing_item, quantity=existing_item.quantity)
+            # Reduce inventory for the additional quantity
+            inventory_service.remove_stock(menu_item_obj, quantity)
         else:
+            # Check if we have enough inventory for the new item
+            if not menu_utils.check_item_availability(menu_item_obj, quantity):
+                raise ValueError(f"Insufficient stock for {menu_item_obj.name}")
+            # Create the order item
             db_utils.create_model_instance(
                 order.OrderItem,
                 order=order_obj,
                 menu_item=menu_item_obj,
                 quantity=quantity
             )
+            # Reduce inventory
+            inventory_service.remove_stock(menu_item_obj, quantity)
     except Exception as e:
         logger.error(f"Error adding item to order {order_id}: {str(e)}")
         raise RuntimeError(f"Failed to add item to order: {str(e)}")
@@ -104,7 +117,7 @@ def add_item_to_order(order_id: str, menu_item_id: int, quantity: int = 1) -> No
 @transaction.atomic
 def remove_item_from_order(order_id: str, menu_item_id: int, quantity: int = 1) -> None:
     """
-    Remove an item from an order
+    Remove an item from an order and restore inventory
     
     Args:
         order_id: The ID of the order
@@ -134,7 +147,11 @@ def remove_item_from_order(order_id: str, menu_item_id: int, quantity: int = 1) 
         if existing_item.quantity > quantity:
             existing_item.quantity -= quantity
             db_utils.update_model_instance(existing_item, quantity=existing_item.quantity)
+            # Restore inventory for the removed quantity
+            inventory_service.add_stock(menu_item_obj, quantity)
         else:
+            # Restore all inventory for this item
+            inventory_service.add_stock(menu_item_obj, existing_item.quantity)
             db_utils.delete_model_instance(existing_item)
     except Exception as e:
         logger.error(f"Error removing item from order {order_id}: {str(e)}")
@@ -202,3 +219,39 @@ def get_item_quantity(order_id: str, menu_item_id: int) -> int:
         raise ValueError(f"Menu item {menu_item_id} not found")
         
     return order_obj.get_item_quantity(menu_item_obj)
+
+
+@transaction.atomic
+def cancel_order(order_id: str) -> None:
+    """
+    Cancel an order and restore inventory
+    
+    Args:
+        order_id: The ID of the order to cancel
+        
+    Raises:
+        ValueError: If order is not found or not in pending status
+        RuntimeError: If there are issues cancelling the order
+    """
+    try:
+        order_obj = get_order(order_id)
+        if not order_obj:
+            raise ValueError(f"Order {order_id} not found")
+            
+        if order_obj.status != 'pending':
+            raise ValueError("Only pending orders can be cancelled")
+            
+        # Restore inventory for all items in the order
+        for order_item in order_obj.items.all():
+            try:
+                inventory_service.add_stock(order_item.menu_item, order_item.quantity)
+            except Exception as e:
+                logger.error(f"Error restoring inventory for {order_item.menu_item.name}: {str(e)}")
+                # Continue with cancellation even if inventory restoration fails
+                
+        # Mark the order as cancelled
+        order_obj.status = 'cancelled'
+        db_utils.update_model_instance(order_obj, status='cancelled')
+    except Exception as e:
+        logger.error(f"Error cancelling order {order_id}: {str(e)}")
+        raise RuntimeError(f"Failed to cancel order: {str(e)}")

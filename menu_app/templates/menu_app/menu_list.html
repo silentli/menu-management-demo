@@ -1,0 +1,123 @@
+{% extends 'menu_app/base.html' %}
+
+{% block title %}Menu{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Our Menu</h1>
+
+    <!-- Cart -->
+    {% if cart_items %}
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Your Cart</h5>
+            <form method="post" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="checkout">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-shopping-cart"></i> Checkout
+                </button>
+            </form>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Total</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in cart_items %}
+                        <tr>
+                            <td>{{ item.menu_item.name }}</td>
+                            <td>${{ item.menu_item.price }}</td>
+                            <td>
+                                <div class="input-group input-group-sm" style="width: 120px;">
+                                    <form method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="menu_item_id" value="{{ item.menu_item.id }}">
+                                        <input type="hidden" name="action" value="decrease">
+                                        <button type="submit" class="btn btn-outline-secondary">-</button>
+                                    </form>
+                                    <span class="input-group-text">{{ item.quantity }}</span>
+                                    <form method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="menu_item_id" value="{{ item.menu_item.id }}">
+                                        <input type="hidden" name="action" value="add">
+                                        <button type="submit" class="btn btn-outline-secondary">+</button>
+                                    </form>
+                                </div>
+                            </td>
+                            <td>${{ item.total_price }}</td>
+                            <td>
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="menu_item_id" value="{{ item.menu_item.id }}">
+                                    <input type="hidden" name="action" value="remove">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                            <td colspan="2"><strong>${{ cart_total }}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Category Filter -->
+    <div class="btn-group mb-4" role="group">
+        <a href="{% url 'menu_app:menu_list' %}" class="btn btn-outline-secondary">All</a>
+        {% for category in categories %}
+            <a href="{% url 'menu_app:menu_list' %}?category={{ category.0 }}" 
+               class="btn btn-outline-secondary">{{ category.1 }}</a>
+        {% endfor %}
+    </div>
+
+    <!-- Menu Items -->
+    <div class="row">
+        {% for menu in menus %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ menu.name }}</h5>
+                    <p class="card-text">
+                        <span class="badge bg-primary">{{ menu.get_category_display }}</span>
+                        <span class="float-end">${{ menu.price }}</span>
+                    </p>
+                    
+                    <form method="post" class="mt-3">
+                        {% csrf_token %}
+                        <input type="hidden" name="menu_item_id" value="{{ menu.id }}">
+                        <input type="hidden" name="action" value="add">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-plus"></i> Add to Cart
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                No menu items available at the moment.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

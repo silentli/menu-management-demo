@@ -1,0 +1,66 @@
+{% extends 'menu_app/base.html' %}
+
+{% block title %}Staff Menu Management{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="{% url 'menu_app:staff_dashboard' %}" class="btn btn-outline-secondary">&larr; Back to Dashboard</a>
+        <a href="{% url 'menu_app:staff_logout' %}" class="btn btn-outline-danger">Logout</a>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Menu Management</h1>
+        <a href="{% url 'menu_app:staff_menu_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add New Menu Item
+        </a>
+    </div>
+
+    <!-- Category Filter -->
+    <div class="btn-group mb-4" role="group">
+        <a href="{% url 'menu_app:staff_menu_list' %}" class="btn btn-outline-secondary">All</a>
+        {% for category in categories %}
+            <a href="{% url 'menu_app:staff_menu_list' %}?category={{ category.0 }}" 
+               class="btn btn-outline-secondary">{{ category.1 }}</a>
+        {% endfor %}
+    </div>
+
+    <!-- Menu Items Table -->
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for menu in menus %}
+                <tr>
+                    <td>{{ menu.name }}</td>
+                    <td>{{ menu.get_category_display }}</td>
+                    <td>${{ menu.price }}</td>
+                    <td>
+                        <div class="btn-group">
+                            <a href="{% url 'menu_app:staff_menu_update' menu.pk %}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <a href="{% url 'menu_app:staff_menu_delete' menu.pk %}" 
+                               class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-trash"></i> Delete
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center">No menu items found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %} 

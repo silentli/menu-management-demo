@@ -1,0 +1,41 @@
+{% extends 'menu_app/base.html' %}
+
+{% block title %}Staff Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Staff Dashboard</h1>
+        <a href="{% url 'menu_app:staff_logout' %}" class="btn btn-outline-danger">Logout</a>
+    </div>
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Menu Management</h5>
+                    <p class="card-text">Manage menu items and categories</p>
+                    <a href="{% url 'menu_app:staff_menu_list' %}" class="btn btn-primary">Manage Menu</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Inventory</h5>
+                    <p class="card-text">Manage inventory and stock levels</p>
+                    <a href="{% url 'menu_app:inventory_list' %}" class="btn btn-primary">Manage Inventory</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Orders</h5>
+                    <p class="card-text">View and manage orders</p>
+                    <a href="{% url 'menu_app:staff_order_list' %}" class="btn btn-primary">View Orders</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,33 @@
+{% extends 'menu_app/base.html' %}
+
+{% block title %}Delete Menu Item{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">Delete Menu Item</h2>
+                </div>
+                <div class="card-body">
+                    <p>Are you sure you want to delete "{{ object.name }}"?</p>
+                    <p class="text-danger">This action cannot be undone.</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                            <a href="{% url 'menu_app:staff_menu_list' %}" class="btn btn-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

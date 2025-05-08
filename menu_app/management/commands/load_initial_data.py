@@ -9,7 +9,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Get the path to the JSON file
         data_file = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
             'data',
             'initial_menu_items.json'
         )

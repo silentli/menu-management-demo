@@ -3,11 +3,12 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, authenticate
 from django.urls import reverse_lazy
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.views.generic.base import RedirectView
+import logging
 
 from menu_app.models.menu_item import MenuItem
 from menu_app.models.inventory import InventoryItem
@@ -15,26 +16,40 @@ from menu_app.models.order import Order
 from menu_app.services import menu_service, order_service, inventory_service
 from menu_app.forms import MenuForm
 
+logger = logging.getLogger(__name__)
+
 class StaffLoginView(View):
     """View for staff login"""
     template_name = 'menu_app/staff/login.html'
     
     def get(self, request):
         if request.user.is_authenticated and request.user.is_staff:
-            return redirect('staff_dashboard')
+            return redirect('menu_app:staff_dashboard')
         return render(request, self.template_name)
     
     def post(self, request):
         password = request.POST.get('password')
+        
+        # Get or create staff user
+        staff_user, created = User.objects.get_or_create(
+            username='staff',
+            defaults={
+                'is_staff': True,
+                'is_active': True
+            }
+        )
+        
+        # Always ensure the staff user has the correct password
+        if created or not staff_user.check_password(settings.STAFF_PASSWORD):
+            staff_user.set_password(settings.STAFF_PASSWORD)
+            staff_user.save()
+        
+        # Check if the provided password matches
         if password == settings.STAFF_PASSWORD:
-            # Get or create staff user
-            staff_user, created = User.objects.get_or_create(
-                username='staff',
-                defaults={'is_staff': True}
-            )
+            # Log the user in
             login(request, staff_user)
             messages.success(request, 'Staff login successful!')
-            return redirect('staff_dashboard')
+            return redirect('menu_app:staff_dashboard')
         
         messages.error(request, 'Invalid password')
         return render(request, self.template_name)
@@ -42,11 +57,15 @@ class StaffLoginView(View):
 class StaffDashboardView(LoginRequiredMixin, View):
     """View for staff dashboard"""
     template_name = 'menu_app/staff/dashboard.html'
+    login_url = 'menu_app:staff_login'
     
     def get(self, request):
         if not request.user.is_staff:
-            return redirect('staff_login')
-        return render(request, self.template_name)
+            return redirect('menu_app:staff_login')
+        
+        # Get all orders for the dashboard
+        orders = order_service.get_all_orders()
+        return render(request, self.template_name, {'orders': orders})
 
 # Staff views
 class StaffMenuListView(LoginRequiredMixin, ListView):
@@ -179,16 +198,27 @@ class InventoryUpdateView(LoginRequiredMixin, View):
     """View for staff to update inventory"""
     def post(self, request, menu_item_id):
         if not request.user.is_staff:
-            return redirect('staff_login')
+            return redirect('menu_app:staff_login')
             
         try:
-            quantity_change = int(request.POST.get('quantity_change'))
-            menu_item = menu_service.get_menu_item_by_id(menu_item_id)
+            menu_item = MenuItem.objects.get(id=menu_item_id)
+            quantity = int(request.POST.get('quantity', 0))
+            
+            # Calculate quantity change from current inventory
+            current_inventory = inventory_service.get_inventory(menu_item)
+            current_quantity = current_inventory.quantity if current_inventory else 0
+            quantity_change = quantity - current_quantity
+            
             inventory_service.update_inventory(menu_item, quantity_change)
-            messages.success(request, 'Inventory updated successfully.')
+            messages.success(request, f'Inventory updated for {menu_item.name}')
+        except MenuItem.DoesNotExist:
+            messages.error(request, 'Menu item not found')
+        except ValueError as e:
+            messages.error(request, str(e))
         except Exception as e:
             messages.error(request, f'Error updating inventory: {str(e)}')
-        return redirect('inventory_list')
+            
+        return redirect('menu_app:inventory_list')
 
 # Order Management Views
 class StaffOrderListView(LoginRequiredMixin, ListView):

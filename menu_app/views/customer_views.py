@@ -59,6 +59,7 @@ class MenuListView(ListView):
                 # Add item to cart
                 cart[menu_item_id] = cart.get(menu_item_id, 0) + 1
                 messages.success(request, 'Item added to cart!')
+                request.session.modified = True
                 
             elif action == 'decrease':
                 # Decrease item quantity
@@ -68,26 +69,44 @@ class MenuListView(ListView):
                 elif menu_item_id in cart:
                     del cart[menu_item_id]
                     messages.success(request, 'Item removed from cart!')
+                request.session.modified = True
                 
             elif action == 'remove':
                 # Remove item from cart
                 if menu_item_id in cart:
                     del cart[menu_item_id]
                     messages.success(request, 'Item removed from cart!')
+                request.session.modified = True
+                    
+            elif action == 'update':
+                # Update item quantity
+                quantity = int(request.POST.get('quantity', 1))
+                if quantity > 0:
+                    cart[menu_item_id] = quantity
+                    messages.success(request, 'Cart updated!')
+                else:
+                    del cart[menu_item_id]
+                    messages.success(request, 'Item removed from cart!')
+                request.session.modified = True
                     
             elif action == 'checkout':
                 # Create order from cart
                 if cart:
-                    # Create new order
-                    new_order = order_service.create_order()
-                    
-                    # Add items to order
-                    for menu_item_id, quantity in cart.items():
-                        order_service.add_item_to_order(new_order.id, int(menu_item_id), quantity)
-                    
-                    # Clear cart
-                    request.session['cart'] = {}
-                    messages.success(request, 'Order placed successfully!')
+                    try:
+                        # Create new order
+                        new_order = order_service.create_order()
+                        
+                        # Add items to order
+                        for menu_item_id, quantity in cart.items():
+                            order_service.add_item_to_order(new_order.id, int(menu_item_id), quantity)
+                        
+                        messages.success(request, 'Order placed successfully!')
+                    except Exception as e:
+                        messages.error(request, f'Error processing order: {str(e)}')
+                    finally:
+                        # Clear cart regardless of success or failure
+                        del request.session['cart']
+                        request.session.modified = True
                     return redirect('menu_app:menu_list')
                 else:
                     messages.warning(request, 'Your cart is empty!')

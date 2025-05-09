@@ -1,0 +1,16 @@
+version: '3'
+services:
+  db:
+    image: postgres:latest
+    container_name: menu-management-test-db
+    environment:
+      POSTGRES_DB: menu_management_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"  # Different port to avoid conflict with dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5 

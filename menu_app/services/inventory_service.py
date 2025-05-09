@@ -17,6 +17,51 @@ def _get_base_inventory_queryset():
     return db_utils.get_model_queryset(inventory.InventoryItem).select_related('menu_item')
 
 
+@transaction.atomic
+def create_inventory(menu_item: menu_item.MenuItem, initial_quantity: int = 0, low_stock_threshold: int = 5) -> inventory.InventoryItem:
+    """
+    Create a new inventory item for a menu item.
+    
+    Args:
+        menu_item: The MenuItem to create inventory for
+        initial_quantity: Initial quantity (default: 0)
+        low_stock_threshold: Threshold for low stock warning (default: 5)
+        
+    Returns:
+        The created InventoryItem
+        
+    Raises:
+        ValueError: If menu_item is invalid, inventory already exists,
+                   or initial_quantity/low_stock_threshold are invalid
+    """
+    if not menu_item:
+        raise ValueError("Menu item cannot be None")
+        
+    if not menu_item.id:
+        raise ValueError("Menu item must be saved before creating inventory")
+        
+    if get_inventory(menu_item):
+        raise ValueError(f"Inventory already exists for menu item {menu_item.name}")
+        
+    try:
+        # Create inventory item with validation
+        inventory_item = inventory.InventoryItem(
+            menu_item=menu_item,
+            quantity=0,  # Start with 0 and use add_stock for proper validation
+            low_stock_threshold=low_stock_threshold
+        )
+        inventory_item.save()
+        
+        # Use the model's add_stock method if initial quantity is provided
+        if initial_quantity > 0:
+            inventory_item.add_stock(initial_quantity)
+            
+        return inventory_item
+    except Exception as e:
+        logger.error(f"Error creating inventory for {menu_item.name}: {str(e)}")
+        raise RuntimeError(f"Failed to create inventory: {str(e)}")
+
+
 def get_inventory(menu_item: menu_item.MenuItem) -> Optional[inventory.InventoryItem]:
     """
     Get inventory for a menu item.
@@ -108,11 +153,7 @@ def add_stock(menu_item: menu_item.MenuItem, quantity: int) -> None:
     try:
         inventory_item = get_inventory(menu_item)
         if not inventory_item:
-            inventory_item = db_utils.create_model_instance(
-                inventory.InventoryItem,
-                menu_item=menu_item,
-                quantity=0
-            )
+            inventory_item = create_inventory(menu_item, initial_quantity=0)
         inventory_item.quantity += quantity
         db_utils.update_model_instance(inventory_item, quantity=inventory_item.quantity)
     except Exception as e:
@@ -173,22 +214,30 @@ def check_availability(menu_item: menu_item.MenuItem, quantity: int) -> bool:
 @transaction.atomic
 def update_inventory(menu_item: menu_item.MenuItem, quantity_change: int) -> None:
     """
-    Update inventory for a menu item.
+    Update inventory for a menu item by adding or removing stock.
+    This is a convenience function that uses add_stock or remove_stock internally.
     
     Args:
         menu_item: The MenuItem to update inventory for
         quantity_change: Amount to change inventory by (positive to add, negative to subtract)
         
     Raises:
-        ValueError: If quantity_change is zero or invalid
+        ValueError: If quantity_change is zero
         RuntimeError: If there are issues updating inventory
     """
+    logger.debug(f"Updating inventory for {menu_item.name}: quantity_change={quantity_change}")
+    
     if quantity_change == 0:
         raise ValueError("Quantity change cannot be zero")
-    if quantity_change > 0:
-        add_stock(menu_item, quantity_change)
-    else:
-        remove_stock(menu_item, abs(quantity_change))
+        
+    try:
+        if quantity_change > 0:
+            add_stock(menu_item, quantity_change)
+        else:
+            remove_stock(menu_item, abs(quantity_change))
+    except Exception as e:
+        logger.error(f"Error updating inventory for {menu_item.name}: {str(e)}")
+        raise RuntimeError(f"Failed to update inventory: {str(e)}")
 
 
 @transaction.atomic

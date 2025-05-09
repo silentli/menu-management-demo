@@ -5,7 +5,7 @@ from functools import wraps
 from django.db.models import QuerySet
 
 from menu_app.models import menu_item
-from menu_app.services import menu_utils
+from menu_app.services import menu_utils, db_utils
 
 logger = logging.getLogger(__name__)
 
@@ -48,13 +48,20 @@ def with_transaction(func):
 
 def get_menu_item(**kwargs) -> Optional[menu_item.MenuItem]:
     """
-    Get a menu item by ID or name
+    Get a menu item by ID or name.
     """
     return menu_utils.get_menu_item(**kwargs)
 
 def get_menu_items(**kwargs) -> Dict[Union[int, str], menu_item.MenuItem]:
     """
-    Get multiple menu items by IDs or names with validation
+    Get multiple menu items by IDs or names with validation.
+    
+    Args:
+        menu_item_ids: List of menu item IDs
+        names: List of menu item names
+        
+    Returns:
+        Dictionary mapping IDs/names to MenuItems
     """
     if not kwargs:
         raise ValueError("Must provide either menu_item_ids or names")
@@ -90,7 +97,7 @@ def get_menu(category: Optional[str] = None, available_only: bool = False) -> Qu
         QuerySet[MenuItem]: A queryset of menu items
     """
     try:
-        queryset = menu_item.MenuItem.objects.all()
+        queryset = db_utils.get_model_queryset(menu_item.MenuItem)
         if category:
             standardized_category = validate_category(category)
             queryset = queryset.filter(category=standardized_category)

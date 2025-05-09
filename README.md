@@ -14,66 +14,37 @@ A Django-based menu ordering service with PostgreSQL integration, packaged with 
 
 - Docker and Docker Compose
 - Git
-- PostgreSQL (for local development)
 
 ## Quick Start
-
-### Docker Deployment (Recommended)
 
 ```bash
 # Clone the repository
 git clone https://github.com/silentli/menu-management-demo.git
 cd menu-management-demo
 
-# Start the application
-docker-compose up -d
+# Build and start all containers
+docker compose -f docker/docker-compose.yml up --build -d
 
 # Access the application
 http://localhost:8000
 ```
 
-## Local Development
+## Testing
 
-1. **Environment Setup**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
+Run tests using pytest:
 
-2. **Database Configuration**
-   ```bash
-   createdb menu_management
-   python manage.py migrate
-   ```
+```bash
+# Run all tests
+python -m pytest
 
-3. **Run Development Server**
-   ```bash
-   python manage.py runserver
-   ```
+# Run with verbose output
+python -m pytest -v
 
-## Configuration
+# Run specific test file
+python -m pytest menu_app/tests/models/test_models.py
+```
 
-### Database Settings
-Default PostgreSQL configuration:
-- Database: menu_management
-- User: postgres
-- Password: postgres
-- Host: localhost (or 'db' in Docker)
-- Port: 5432
-
-### Environment Variables
-Override default settings using:
-- `DB_NAME`
-- `DB_USER`
-- `DB_PASSWORD`
-- `DB_HOST`
-- `DB_PORT`
-
-## Architecture
-
-- **Backend**: Django Framework
-- **Database**: PostgreSQL
-- **Containerization**: Docker
-- **Frontend**: Bootstrap
-- **Deployment**: Microservice-ready
+The test suite includes:
+- Model tests (menu items, inventory, orders)
+- View tests (customer and staff interfaces)
+- Integration tests (order flow, inventory updates)

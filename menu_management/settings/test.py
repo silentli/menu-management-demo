@@ -1,4 +1,12 @@
-from .settings import *
+"""
+Test settings for menu_management project.
+"""
+from .base import *
+
+# Test-specific settings
+DEBUG = False
+SECRET_KEY = 'test-secret-key'
+STAFF_PASSWORD = 'test_staff_password'
 
 # Override database settings for testing
 DATABASES = {
@@ -13,9 +21,4 @@ DATABASES = {
             'NAME': 'menu_management_test',
         },
     }
-}
-
-# Test-specific settings
-DEBUG = False
-SECRET_KEY = 'test-secret-key'
-STAFF_PASSWORD = 'test_staff_password' 
+} 

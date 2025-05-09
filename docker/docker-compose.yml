@@ -20,6 +20,7 @@ services:
       - POSTGRES_HOST=db
       - POSTGRES_PORT=5432
       - DJANGO_SETTINGS_MODULE=menu_management.settings
+      - DJANGO_ENV=production
       - STAFF_PASSWORD=test_staff_password
     command: gunicorn menu_management.wsgi:application --bind 0.0.0.0:8000
 

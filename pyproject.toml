@@ -10,7 +10,7 @@ classifiers = [
 ]
 
 [tool.ruff]
-target-version = "py313"
+target-version = "py312"
 line-length = 100
 
 # Exclude common directories
@@ -36,6 +36,7 @@ ignore = ["DJ012", "Q000", "Q003"]  # Ignore false positive about save method or
 "*/forms.py" = ["RUF012"] # Allow mutable class attributes in Django forms
 "*/migrations/*" = ["RUF012"] # Allow mutable class attributes in migrations
 "*/settings/*.py" = ["F403", "F405"] # Allow star imports in Django settings
+"menu_app/urls.py" = ["E501"] # Allow long lines in URLs file
 
 [tool.ruff.format]
 # Prefer single quotes over double quotes.

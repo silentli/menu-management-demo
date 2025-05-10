@@ -1,6 +1,7 @@
 """
 Test settings for menu_management project.
 """
+
 from .base import *
 
 # Test-specific settings
@@ -21,4 +22,4 @@ DATABASES = {
             'NAME': 'menu_management_test',
         },
     }
-} 
+}

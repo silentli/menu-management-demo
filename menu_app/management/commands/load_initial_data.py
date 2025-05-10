@@ -1,7 +1,10 @@
 import json
 import os
+
 from django.core.management.base import BaseCommand
-from menu_app.models import MenuItem, InventoryItem
+
+from menu_app.models import InventoryItem, MenuItem
+
 
 class Command(BaseCommand):
     help = 'Load initial menu items and inventory data from JSON file'
@@ -11,7 +14,7 @@ class Command(BaseCommand):
         data_file = os.path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
             'data',
-            'initial_menu_items.json'
+            'initial_menu_items.json',
         )
 
         try:
@@ -32,17 +35,18 @@ class Command(BaseCommand):
                     menu_item = MenuItem.objects.create(
                         category=item_data['category'],
                         name=item_data['name'],
-                        price=item_data['price']
+                        price=item_data['price'],
                     )
                     # Create inventory for each menu item
                     InventoryItem.objects.create(
-                        menu_item=menu_item,
-                        quantity=data['initial_inventory_quantity']
+                        menu_item=menu_item, quantity=data['initial_inventory_quantity']
                     )
                     self.stdout.write(self.style.SUCCESS(f'Created menu item: {item_data["name"]}'))
                 except Exception as e:
-                    self.stdout.write(self.style.ERROR(f'Error creating menu item {item_data["name"]}: {str(e)}'))
-            
+                    self.stdout.write(
+                        self.style.ERROR(f'Error creating menu item {item_data["name"]}: {e!s}')
+                    )
+
             self.stdout.write(self.style.SUCCESS('Successfully loaded initial data'))
         else:
-            self.stdout.write(self.style.WARNING('Menu items already exist, skipping data load')) 
+            self.stdout.write(self.style.WARNING('Menu items already exist, skipping data load'))

@@ -1,6 +1,7 @@
 from django.contrib import admin
-from menu_app.models.menu_item import MenuItem
+
 from menu_app.models.inventory import InventoryItem
+from menu_app.models.menu_item import MenuItem
 from menu_app.models.order import Order, OrderItem
 
 

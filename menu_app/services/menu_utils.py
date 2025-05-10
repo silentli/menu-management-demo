@@ -1,18 +1,21 @@
 """
 Utility functions for menu-specific operations.
 """
+
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from django.db.models import Q
 
-from menu_app.models import menu_item, inventory
+from menu_app.models import inventory, menu_item
 from menu_app.services import db_utils
 
 logger = logging.getLogger(__name__)
 
 
-def get_menu_item(menu_item_id: int = None, name: str = None) -> Optional[menu_item.MenuItem]:
+def get_menu_item(
+    menu_item_id: Union[int, None] = None, name: Union[str, None] = None
+) -> Optional[menu_item.MenuItem]:
     """
     Get menu item by ID or name.
     Exactly one of menu_item_id or name must be provided.
@@ -20,7 +23,9 @@ def get_menu_item(menu_item_id: int = None, name: str = None) -> Optional[menu_i
     return db_utils.get_model_instance(menu_item.MenuItem, id=menu_item_id, name=name)
 
 
-def get_menu_items_bulk(menu_item_ids: List[int] = None, names: List[str] = None) -> Dict:
+def get_menu_items_bulk(
+    menu_item_ids: Union[List[int], None] = None, names: Union[List[str], None] = None
+) -> Dict:
     """
     Get multiple menu items by IDs or names in one query.
     Exactly one of menu_item_ids or names must be provided.
@@ -46,16 +51,15 @@ def get_available_menu_items() -> List[menu_item.MenuItem]:
     """
     Get menu items that have inventory
     """
-    return list(db_utils.get_model_queryset(
-        menu_item.MenuItem,
-        inventory__quantity__gt=0
-    ).order_by('category', 'name'))
+    return list(
+        db_utils.get_model_queryset(menu_item.MenuItem, inventory__quantity__gt=0).order_by(
+            'category', 'name'
+        )
+    )
 
 
 def find_menu_item_by_name(
-    name: str,
-    use_fuzzy: bool = False,
-    cutoff: float = 0.6
+    name: str, use_fuzzy: bool = False, cutoff: float = 0.6
 ) -> Optional[menu_item.MenuItem]:
     """
     Find a menu item by name with optional fuzzy matching
@@ -69,24 +73,21 @@ def find_menu_item_by_name(
     exact_match = get_menu_item(name=name)
     if exact_match:
         return exact_match
-        
+
     if not use_fuzzy:
         return None
 
     # Try partial match
-    partial_match = db_utils.get_model_queryset(
-        menu_item.MenuItem,
-        name__icontains=name
-    ).first()
+    partial_match = db_utils.get_model_queryset(menu_item.MenuItem, name__icontains=name).first()
     if partial_match:
         return partial_match
 
     # Try fuzzy match only if enabled
     # ruff: noqa: E402
     from difflib import get_close_matches
+
     menu_item_names = list(
-        db_utils.get_model_queryset(menu_item.MenuItem)
-        .values_list('name', flat=True)
+        db_utils.get_model_queryset(menu_item.MenuItem).values_list('name', flat=True)
     )
     close_matches = get_close_matches(name, menu_item_names, n=1, cutoff=cutoff)
 
@@ -102,9 +103,11 @@ def search_menu_items(query: str) -> List[menu_item.MenuItem]:
     """
     Search menu items by name or category
     """
-    return list(db_utils.get_model_queryset(menu_item.MenuItem).filter(
-        Q(name__icontains=query) | Q(category__icontains=query)
-    ).order_by('category', 'name'))
+    return list(
+        db_utils.get_model_queryset(menu_item.MenuItem)
+        .filter(Q(name__icontains=query) | Q(category__icontains=query))
+        .order_by('category', 'name')
+    )
 
 
 def check_item_availability(menu_item: menu_item.MenuItem, quantity: int = 1) -> bool:
@@ -115,7 +118,7 @@ def check_item_availability(menu_item: menu_item.MenuItem, quantity: int = 1) ->
         inventory_item = inventory.InventoryItem.objects.get(menu_item=menu_item)
         return inventory_item.quantity >= quantity
     except inventory.InventoryItem.DoesNotExist:
-        logger.warning(f"No inventory found for menu item {menu_item.name}")
+        logger.warning(f'No inventory found for menu item {menu_item.name}')
         return False
 
 
@@ -124,7 +127,7 @@ def create_menu_item(
     description: str,
     price: float,
     category: str,
-    image_url: str = None
+    image_url: Union[str, None] = None,
 ) -> menu_item.MenuItem:
     """
     Create a new menu item
@@ -135,15 +138,15 @@ def create_menu_item(
         description=description,
         price=price,
         category=category,
-        image_url=image_url
+        image_url=image_url,
     )
 
 
 def update_menu_item(
     menu_item: menu_item.MenuItem,
-    name: str = None,
-    price: float = None,
-    category: str = None
+    name: Union[str, None] = None,
+    price: Union[float, None] = None,
+    category: Union[str, None] = None,
 ) -> menu_item.MenuItem:
     """
     Update an existing menu item

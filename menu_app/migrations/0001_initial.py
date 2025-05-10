@@ -5,18 +5,35 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
             name='MenuItem',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('category', models.CharField(choices=[('appetizer', 'Appetizer'), ('main', 'Main Course'), ('dessert', 'Dessert'), ('beverage', 'Beverage')], max_length=100)),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'category',
+                    models.CharField(
+                        choices=[
+                            ('appetizer', 'Appetizer'),
+                            ('main', 'Main Course'),
+                            ('dessert', 'Dessert'),
+                            ('beverage', 'Beverage'),
+                        ],
+                        max_length=100,
+                    ),
+                ),
                 ('name', models.CharField(max_length=100, unique=True)),
                 ('price', models.DecimalField(decimal_places=2, max_digits=6)),
             ],
@@ -27,10 +44,29 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Order',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('status', models.CharField(choices=[('pending', 'Pending'), ('completed', 'Completed'), ('cancelled', 'Cancelled')], default='pending', max_length=20)),
+                (
+                    'status',
+                    models.CharField(
+                        choices=[
+                            ('pending', 'Pending'),
+                            ('completed', 'Completed'),
+                            ('cancelled', 'Cancelled'),
+                        ],
+                        default='pending',
+                        max_length=20,
+                    ),
+                ),
             ],
             options={
                 'ordering': ['-created_at'],
@@ -39,10 +75,25 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='InventoryItem',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
                 ('quantity', models.PositiveIntegerField(default=0)),
                 ('low_stock_threshold', models.PositiveIntegerField(default=5)),
-                ('menu_item', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='inventory', to='menu_app.menuitem')),
+                (
+                    'menu_item',
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='inventory',
+                        to='menu_app.menuitem',
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'Inventory Item',
@@ -53,11 +104,35 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='OrderItem',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
                 ('quantity', models.PositiveIntegerField(default=1)),
-                ('price_at_time_of_order', models.DecimalField(decimal_places=2, max_digits=6)),
-                ('menu_item', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='menu_app.menuitem')),
-                ('order', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='items', to='menu_app.order')),
+                (
+                    'price_at_time_of_order',
+                    models.DecimalField(decimal_places=2, max_digits=6),
+                ),
+                (
+                    'menu_item',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to='menu_app.menuitem',
+                    ),
+                ),
+                (
+                    'order',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='items',
+                        to='menu_app.order',
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'Order Item',

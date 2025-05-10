@@ -1,67 +1,62 @@
+from typing import ClassVar, List
+
+from django.core.exceptions import ValidationError
 from django.db import models
-from menu_app.models.menu_item import MenuItem
+
+from .menu_item import MenuItem
 
 
 class InventoryItem(models.Model):
     """
-    Model representing inventory for a menu item.
-    Tracks quantity of each item available in stock.
+    Represents inventory tracking for a menu item.
     """
-    menu_item = models.OneToOneField(
-        MenuItem, 
-        on_delete=models.CASCADE,
-        related_name='inventory'
-    )
+
+    # Fields
+    menu_item = models.OneToOneField(MenuItem, on_delete=models.CASCADE, related_name='inventory')
     quantity = models.PositiveIntegerField(default=0)
     low_stock_threshold = models.PositiveIntegerField(default=5)
 
-    @property
-    def is_sold_out(self):
-        """Check if the item is sold out"""
-        return self.quantity == 0
+    class Meta:
+        verbose_name = 'Inventory Item'
+        verbose_name_plural = 'Inventory Items'
+        ordering: ClassVar[List[str]] = ['menu_item__category', 'menu_item__name']
 
-    @property
-    def is_low_stock(self):
-        """Check if the item is low in stock"""
-        return self.quantity < self.low_stock_threshold
-
-    def mark_sold_out(self):
-        """Mark the item as sold out by setting quantity to 0"""
-        if self.quantity > 0:
-            self.quantity = 0
-            self.save()
-
-    def add_stock(self, amount):
-        """Add stock to the inventory"""
-        if amount < 0:
-            raise ValueError("Cannot add negative stock")
-        self.quantity += amount
-        self.save()
-
-    def remove_stock(self, amount):
-        """Remove stock from the inventory"""
-        if amount < 0:
-            raise ValueError("Cannot remove negative stock")
-        if amount > self.quantity:
-            raise ValueError("Cannot remove more stock than available")
-        self.quantity -= amount
-        self.save()
+    def __str__(self):
+        return f'{self.menu_item.name} - {self.quantity} available'
 
     def clean(self):
-        """Validate the inventory item"""
+        """Validate the inventory item."""
         if self.quantity < 0:
-            raise ValueError("Quantity cannot be negative")
+            raise ValidationError('Quantity cannot be negative')
         if self.low_stock_threshold <= 0:
-            raise ValueError("Low stock threshold must be positive")
+            raise ValidationError('Low stock threshold must be positive')
 
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
 
-    def __str__(self):
-        return f"{self.menu_item.name} - {self.quantity} available"
+    @property
+    def is_low_stock(self) -> bool:
+        """Check if the item is low on stock."""
+        return self.quantity <= self.low_stock_threshold
 
-    class Meta:
-        verbose_name = "Inventory Item"
-        verbose_name_plural = "Inventory Items"
-        ordering = ['menu_item__category', 'menu_item__name']
+    @property
+    def is_sold_out(self) -> bool:
+        """Check if the item is sold out."""
+        return self.quantity == 0
+
+    def add_stock(self, amount: int) -> None:
+        """Add stock to inventory."""
+        if amount <= 0:
+            raise ValueError('Amount must be positive')
+        self.quantity += amount
+        self.save()
+
+    def remove_stock(self, amount: int) -> None:
+        """Remove stock from inventory."""
+        if amount <= 0:
+            raise ValueError('Amount must be positive')
+        if amount > self.quantity:
+            raise ValueError('Insufficient stock')
+        self.quantity -= amount
+        self.save()

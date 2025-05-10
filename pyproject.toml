@@ -1,0 +1,42 @@
+[project]
+name = "menu-management-demo"
+version = "0.1.0"
+description = "A menu management system demo"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "MIT License",
+]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+# Exclude common directories
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "node_modules",
+    "build",
+    "dist",
+]
+
+[tool.ruff.lint]
+# Enable essential rules
+select = ["E", "F", "I", "DJ", "RUF", "Q"]
+ignore = ["DJ012", "Q000", "Q003"]  # Ignore false positive about save method ordering and quote style rules
+
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]  # Allow unused imports in __init__.py
+"tests/*" = ["S101"]      # Allow assert statements in tests
+"*/admin.py" = ["RUF012"] # Allow mutable class attributes in Django admin
+"*/forms.py" = ["RUF012"] # Allow mutable class attributes in Django forms
+"*/migrations/*" = ["RUF012"] # Allow mutable class attributes in migrations
+"*/settings/*.py" = ["F403", "F405"] # Allow star imports in Django settings
+
+[tool.ruff.format]
+# Prefer single quotes over double quotes.
+quote-style = "single" 

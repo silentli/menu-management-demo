@@ -1,7 +1,17 @@
 """
 Production settings for menu_management project.
 """
+
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+
 from .base import *
+
+# Load environment variables from .env file
+env_path = Path(__file__).resolve().parent / 'env' / '.env'
+load_dotenv(dotenv_path=env_path)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
@@ -32,4 +42,4 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY' 
+X_FRAME_OPTIONS = 'DENY'

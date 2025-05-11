@@ -3,10 +3,10 @@ services:
   db:
     image: postgres:latest
     container_name: menu-management-test-db
+    env_file:
+      - ../menu_management/settings/env/.env.test
     environment:
       POSTGRES_DB: menu_management_test
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
     ports:
       - "5433:5432"  # Different port to avoid conflict with dev
     healthcheck:

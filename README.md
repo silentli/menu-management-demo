@@ -15,6 +15,14 @@ A Django-based menu ordering service with PostgreSQL integration, packaged with 
 - Docker and Docker Compose
 - Git
 
+## Environment Setup
+
+Environment variables are managed using `.env` files located in `menu_management/settings/env/`.
+
+- For production: `menu_management/settings/env/.env`
+- For testing: `menu_management/settings/env/.env.test`
+- Example template: `menu_management/settings/env/.env.example`
+
 ## Quick Start
 
 ```bash
@@ -31,17 +39,14 @@ http://localhost:8000
 
 ## Testing
 
-Run tests using pytest:
+Run tests using pytest with the correct environment:
 
 ```bash
-# Run all tests
-python -m pytest
-
-# Run with verbose output
-python -m pytest -v
+# Run all tests with test environment variables
+DJANGO_ENV=test python -m pytest
 
 # Run specific test file
-python -m pytest menu_app/tests/models/test_models.py
+DJANGO_ENV=test python -m pytest menu_app/tests/models/test_models.py
 ```
 
 The test suite includes:

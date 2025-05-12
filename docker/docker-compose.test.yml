@@ -1,16 +1,24 @@
-version: '3'
+version: '3.8'
+
+# This file is for local development and testing only.
+# CI/CD uses direct Docker commands in GitHub Actions.
+
 services:
   db:
-    image: postgres:latest
-    container_name: menu-management-test-db
+    image: postgres:14
     env_file:
       - ../menu_management/settings/env/.env.test
     environment:
-      POSTGRES_DB: menu_management_test
+      - POSTGRES_HOST_AUTH_METHOD=trust
     ports:
-      - "5433:5432"  # Different port to avoid conflict with dev
+      - "${POSTGRES_PORT:-5433}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
-      retries: 5 
+      retries: 5
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_test_data: 

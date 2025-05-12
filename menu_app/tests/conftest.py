@@ -14,11 +14,19 @@ from menu_app.models.order import Order
 def is_postgres_ready():
     """Check if PostgreSQL is ready to accept connections."""
     try:
-        # Use docker command to check if postgres is ready
-        os.system(
-            'docker compose -f docker/docker-compose.yml '
-            'exec -T db pg_isready -h localhost -p 5432 > /dev/null 2>&1'
-        )
+        # Get port from environment or use default
+        port = os.environ.get('POSTGRES_PORT', '5433')
+
+        # Check if we're in CI environment
+        if os.getenv('CI'):
+            # In CI, PostgreSQL is running directly
+            os.system(f'pg_isready -h localhost -p {port} > /dev/null 2>&1')
+        else:
+            # In local environment, use docker-compose
+            os.system(
+                f'docker compose -f docker/docker-compose.test.yml '
+                f'exec -T db pg_isready -h localhost -p {port} > /dev/null 2>&1'
+            )
         return True
     except Exception:
         return False

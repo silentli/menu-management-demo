@@ -1,0 +1,12 @@
+-r test.txt
+-r quality.txt
+
+# Development tools
+ipython==8.21.0  # Enhanced Python REPL
+django-debug-toolbar==4.3.0  # Debug toolbar
+watchfiles==0.21.0  # Auto-reload
+
+# Code quality
+pre-commit==3.6.2  # Git hooks
+bandit==1.7.7  # Security checks
+safety==2.3.5  # Dependency checks 

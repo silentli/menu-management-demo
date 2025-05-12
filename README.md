@@ -14,6 +14,8 @@ A Django-based menu ordering service with PostgreSQL integration, packaged with 
 
 - Docker and Docker Compose
 - Git
+- Python 3.12 or later
+- PostgreSQL client tools
 
 ## Environment Setup
 
@@ -39,15 +41,36 @@ http://localhost:8000
 
 ## Testing
 
+### Setup Test Environment
+
+1. Start the test database:
+```bash
+docker compose -f docker/docker-compose.test.yml up -d db
+```
+
+2. Install test dependencies:
+```bash
+pip install -r requirements/test.txt
+```
+
+3. Run database migrations:
+```bash
+DJANGO_ENV=test python manage.py migrate
+```
+
+### Running Tests
+
 Run tests using pytest with the correct environment:
 
 ```bash
-# Run all tests with test environment variables
-DJANGO_ENV=test python -m pytest
+# Run all tests with coverage report
+DJANGO_ENV=test python -m pytest --cov=menu_management --cov-report=term-missing
 
 # Run specific test file
 DJANGO_ENV=test python -m pytest menu_app/tests/models/test_models.py
 ```
+
+### Test Suite Coverage
 
 The test suite includes:
 - Model tests (menu items, inventory, orders)

@@ -51,10 +51,10 @@ def django_db_setup():
     # Print database settings for debugging
     print('\nDjango Database Settings:')
     print('----------------------')
-    print(f"NAME: {settings.DATABASES['default']['NAME']}")
-    print(f"USER: {settings.DATABASES['default']['USER']}")
-    print(f"HOST: {settings.DATABASES['default']['HOST']}")
-    print(f"PORT: {settings.DATABASES['default']['PORT']}")
+    print(f'NAME: {settings.DATABASES["default"]["NAME"]}')
+    print(f'USER: {settings.DATABASES["default"]["USER"]}')
+    print(f'HOST: {settings.DATABASES["default"]["HOST"]}')
+    print(f'PORT: {settings.DATABASES["default"]["PORT"]}')
     print('------------------------------')
 
 

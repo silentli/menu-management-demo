@@ -44,7 +44,7 @@ def get_model_instance(
         return model_class.objects.get(**filters)
     except model_class.DoesNotExist:
         logger.warning(
-            f'{model_class.__name__} not found ' f'(id={id}, {name_field}={name}, filters={kwargs})'
+            f'{model_class.__name__} not found (id={id}, {name_field}={name}, filters={kwargs})'
         )
         return None
 

@@ -19,7 +19,7 @@ def validate_category(category: str) -> str:
     standardized_category = category.strip().lower()
     valid_categories = [choice[0] for choice in menu_item.MenuItem.CATEGORY_CHOICES]
     if standardized_category not in valid_categories:
-        raise ValueError(f"Invalid category. Must be one of: {', '.join(valid_categories)}")
+        raise ValueError(f'Invalid category. Must be one of: {", ".join(valid_categories)}')
     return standardized_category
 
 

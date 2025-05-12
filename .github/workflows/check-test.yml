@@ -10,20 +10,25 @@ jobs:
   test:
     runs-on: ubuntu-latest
     environment: test
-    
     services:
       postgres:
         image: postgres:14
+        env:
+          POSTGRES_DB: ${{ vars.POSTGRES_DB }}
+          POSTGRES_USER: ${{ vars.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         ports:
-          - 5433:5432
+          - ${{ vars.POSTGRES_PORT }}:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    
     steps:
     - uses: actions/checkout@v4
+    
+    - name: Print environment variables
+      run: env
     
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -35,17 +40,20 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements/test.txt
+
+    - name: Run migrations
+      env:
+        DJANGO_SETTINGS_MODULE: menu_management.settings.test
+        DJANGO_ENV: test
+        POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
+      run: |
+        python manage.py migrate
     
     - name: Run tests with coverage
       env:
         CI: true
         DJANGO_SETTINGS_MODULE: menu_management.settings.test
         DJANGO_ENV: test
+        POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
       run: |
-        pytest --cov=menu_management --cov-report=xml --cov-report=term-missing
-    
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./coverage.xml
-        fail_ci_if_error: true 
+        pytest --cov=menu_management --cov-report=xml --cov-report=term-missing 

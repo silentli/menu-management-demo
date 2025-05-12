@@ -14,7 +14,6 @@ jobs:
       - uses: astral-sh/ruff-action@v3
         with:
           args: check --output-format=github .
-        working-directory: ${{ github.workspace }}
       - uses: astral-sh/ruff-action@v3
         with:
           args: format --check .

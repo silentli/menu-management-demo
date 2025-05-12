@@ -39,6 +39,43 @@ docker compose -f docker/docker-compose.yml up --build -d
 http://localhost:8000
 ```
 
+## Code Quality
+
+### Linting
+
+The project uses `ruff` for linting and code quality checks. To run the linter:
+
+```bash
+# Install linting dependencies
+pip install -r requirements/quality.txt
+
+# Run the linter
+ruff check .
+
+# Run the linter with auto-fix
+ruff check --fix .
+```
+
+Common linting rules:
+- `RUF022`: `__all__` lists must be sorted alphabetically
+- `E501`: Line length should not exceed 88 characters
+- `F401`: Unused imports should be removed
+
+### Pre-commit Hooks
+
+The project includes pre-commit hooks to ensure code quality before commits:
+
+```bash
+# Install pre-commit
+pip install pre-commit
+
+# Install the git hooks
+pre-commit install
+
+# Run pre-commit on all files
+pre-commit run --all-files
+```
+
 ## Testing
 
 ### Setup Test Environment

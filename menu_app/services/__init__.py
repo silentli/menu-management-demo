@@ -5,4 +5,4 @@ Provides business logic and data access operations.
 
 from menu_app.services import inventory_service, menu_service, order_service
 
-__all__ = ['menu_service', 'inventory_service', 'order_service']
+__all__ = ['inventory_service', 'menu_service', 'order_service']

@@ -32,3 +32,11 @@ DATABASES = {
         },
     }
 }
+
+# Explicitly disable proxy settings for tests
+USE_X_FORWARDED_HOST = False
+USE_X_FORWARDED_PORT = False
+SECURE_PROXY_SSL_HEADER = None
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False

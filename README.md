@@ -9,6 +9,7 @@ A Django-based menu ordering service with PostgreSQL integration, packaged with 
 - **Order Processing**: Streamlined order creation and management
 - **Dual Interface**: Separate views for customers and staff
 - **Docker Support**: Containerized deployment for consistency
+- **Nginx Integration**: Production-grade web server with SSL support and optimized request handling
 
 ## Prerequisites
 
@@ -36,8 +37,16 @@ cd menu-management-demo
 docker compose -f docker/docker-compose.yml up --build -d
 
 # Access the application
-http://localhost:8000
+http://localhost/menu/  # Customer menu interface
+http://localhost/staff/ # Staff management interface
 ```
+
+## Architecture
+
+The application uses a multi-container setup:
+- **Web**: Django application server
+- **Nginx**: Web server for handling HTTP requests and serving static files
+- **PostgreSQL**: Database server
 
 ## Code Quality
 

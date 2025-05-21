@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements/ requirements/
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements/prod.txt
+RUN pip install --no-cache-dir -r requirements/base.txt
 
 # Copy project
 COPY . .
@@ -26,10 +26,12 @@ RUN chmod +x /app/entrypoint.sh
 
 # Create a non-root user
 RUN useradd -m -u 1000 app_user
-USER app_user
 
 # Collect static files
 RUN mkdir -p staticfiles && python manage.py collectstatic --noinput
+
+# Switch to non-root user
+USER app_user
 
 # Expose port
 EXPOSE 8000
